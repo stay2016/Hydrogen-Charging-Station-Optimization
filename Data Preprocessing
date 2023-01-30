@@ -1,0 +1,264 @@
+# 기본 라이브러리
+import sys  # 시스템 파라미터에 접근할 수 있도록 도와준다.
+print("Python version: {}". format(sys.version))
+
+import pandas as pd  # 데이터 정제에 도움을 주는 라이브러리
+print("pandas version: {}". format(pd.__version__))
+
+import matplotlib  # 매트랩에서 사용하는 시각화에 도움을 주는 라이브러리
+print("matplotlib version: {}". format(matplotlib.__version__))
+
+import numpy as np  # 행렬 계산을 위해 필요한 라이브러리
+print("numpy version: {}". format(np.__version__))
+
+import scipy as sp  # 수학 관련 함수가 내장된 라이브러리
+print("scipy version: {}". format(sp.__version__))
+
+import IPython
+from IPython import display  # 주피터 노트북에서 시각화 해주는 라이브러리
+print("IPython version: {}". format(IPython.__version__))
+
+import sklearn  # 각종 통계 도구와 머신 러닝 알고리즘이 내장되어 있는 라이브러리
+print("sklearn version: {}". format(sklearn.__version__))
+
+import tensorflow as tf
+print("tensorflow version: {}". format(tf.__version__))
+
+import geopandas as gpd  # 공간정보 라이브러리
+print("geopandas version: {}". format(gpd.__version__))
+
+import folium
+from folium.plugins import MiniMap
+print("folium version: {}". format(folium.__version__))
+
+# 파이썬 내장 라이브러리
+import random
+import datetime
+import time
+import os
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import copy
+import io
+import math
+
+# 모델링 라이브러리, 수학 계산 틀 로드
+# 일반적인 모델링 라이브러리
+from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process
+from xgboost import XGBClassifier
+
+# 모델링 시 헬퍼 함수들
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn import feature_selection
+from sklearn import model_selection
+from sklearn import metrics
+
+# interpolation 함수
+import scipy.interpolate as spi
+from scipy import stats
+
+# model load
+import pickle
+# from sklearn.externals import joblib
+
+# 시각화 도구
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.pylab as pylab
+import seaborn as sns
+from pandas.plotting import scatter_matrix
+
+# 시각화 도구 defalut 세팅
+# 주피터 노트북에서 plot 결과를 볼 수 있게 해준다.
+mpl.style.use('ggplot')  # matplotlib에서 plot되는 결과를 선택할 수 있다.
+sns.set_style('white')  # seaborn에서 사용할 style을 설정할 수 있다.
+pylab.rcParams['figure.figsize'] = 12, 8  # plot의 크기와 선 등의 기본 값을 설정할 수 있다.
+
+plt.style.use(['fivethirtyeight'])
+sns.set_style('darkgrid')
+
+from IPython.display import display  # print가 아닌 display로 연속 출력
+from IPython.display import HTML  # 출력 결과를 HTML로 생성
+import fiona  # 공간 데이터를 딕셔너리 형태 등으로 접근할 수 있는 라이브러리
+
+# 좌표계 정의/변환용 라이브러리
+import pyproj
+
+# 좌표간의 거리 구하기 위한 라이브러리
+from haversine import haversine
+
+# Jypyter notebook 이나 ipython을 사용하다 보면 향후 버전이 올라갈 때 나올 수 있는 경고(warning)를 나오지 않게 해준다.
+import warnings
+warnings.filterwarnings('ignore')
+print('-' *25)
+
+# 뒤에서 overlay를 활용하기 위함. 설치 후 런타임 다시 시작할 것
+
+import rtree
+import pathlib
+import mapclassify
+
+# 크롤링 & API 
+import requests
+import json
+import openpyxl
+
+# Google API
+import googlemaps
+googlemaps_key = "AIzaSyCv0aPYUIwIk09L1XFrDesDxOF0b0ArAl0"
+gmaps = googlemaps.Client(key=googlemaps_key)
+
+# 수요 대표지역 중 상위 지역 파일 불러오기(50곳)
+Upper_Road = pd.read_csv('Upper_Road.csv', encoding = 'utf8')
+Upper_Road.tail()
+
+# 수요 대표지역 파일 불러오기(550곳)
+Merge_Road = pd.read_csv('Merge_Road.csv', encoding = 'utf8')
+Merge_Road
+
+# 데이터프레임 주소값 추출
+M_address = Merge_Road['상세주소']
+print(M_address.head())
+
+# 주소 데이터 깔끔하게 다듬기
+for i in range(len(Merge_Road)):
+    a = M_address[i].split(' ')
+    M_address[i] = " ".join(a[0:4])
+print(M_address)
+
+# DataFrame 만들기
+M_address_df = pd.DataFrame({'주소':Merge_Road['상세주소']})
+M_address_df
+
+# 결과가 리스트의 첫 번째 원소로 전부 들어가 있기 때문에 list[0] 으로 잡아서 좌표를 찾아낼 것
+geo_location = gmaps.geocode(M_address_df['주소'][0])[0].get('geometry')
+
+lat = geo_location['location']['lat']
+lng = geo_location['location']['lng']
+
+print(lat, lng)
+
+# 데이터프레임 열 전체를 수행하려면 for문 사용
+
+lat, lng = [], []
+
+for i, location in enumerate(M_address_df.주소):
+    try:
+        geo_location = gmaps.geocode(location)[0].get('geometry')
+        lat.append(geo_location['location']['lat'])
+        lng.append(geo_location['location']['lng'])
+    except:
+        print(f"{i}번째 {(M_address_df.iloc[i, 0])}의 좌표를 찾을 수 없음")
+        lat.append(i)
+        lng.append(i)
+        
+# 위/경도 데이터프레임에 추가
+
+M_address_df['lat'] = lat
+M_address_df['lng'] = lng
+
+M_address_df
+
+# 충전소 후보지 불러오기(550곳)
+Seoul_Station_df = pd.read_csv('서울특별시_충전소 후보지_20220101.csv', encoding = 'cp949')
+print(Seoul_Station_df.head())
+
+# 데이터프레임 주소값 추출
+Station_address = Seoul_Station_df['주소']
+print(Station_address.head())
+
+# 주소 데이터 깔끔하게 다듬기
+for i in range(len(Station_address)):
+    a = Station_address[i].split(' ')
+    Station_address[i] = " ".join(a[0:4])
+print(Station_address)
+
+# DataFrame 만들기
+Station_address_df = pd.DataFrame({'행정구역':Seoul_Station_df['자치구명'],'충전소 이름':Seoul_Station_df['주유소명'] , '상세주소':Seoul_Station_df['주소']})
+Station_address_df
+
+# 결과가 리스트의 첫 번째 원소로 전부 들어가 있기 때문에 list[0] 으로 잡아서 좌표를 찾아낼 것
+geo_location = gmaps.geocode(Station_address_df['상세주소'][0])[0].get('geometry')
+
+lat = geo_location['location']['lat']
+lng = geo_location['location']['lng']
+
+print(lat, lng)
+
+# 데이터프레임 열 전체를 수행하려면 for문 사용
+
+lat, lng = [], []
+
+for i, location in enumerate(Station_address_df.상세주소):
+    try:
+        geo_location = gmaps.geocode(location)[0].get('geometry')
+        lat.append(geo_location['location']['lat'])
+        lng.append(geo_location['location']['lng'])
+    except:
+        print(f"{i}번째 {(Station_address_df.iloc[i, 3])}의 좌표를 찾을 수 없음")
+        lat.append(i)
+        lng.append(i)
+        
+# 위/경도 데이터프레임에 추가
+
+Station_address_df['lat'] = lat
+Station_address_df['lng'] = lng
+
+Station_address_df
+
+## 검증
+# 거리 구하기 샘플 코드
+
+# 위경도 입력
+금화터널 = (37.5677894, 126.9488821)  #Latitude, Longitude
+남서울가스 = (37.4977796, 127.0755652)
+
+# 거리 계산
+haversine(금화터널, 남서울가스, unit = 'm')
+
+# 직선 거리 위치 시각화
+lat2 = Station_address_df['lat'].mean()
+long2 = Station_address_df['lng'].mean()
+
+m01 = folium.Map(location=[lat2, long2], 
+               zoom_start=14)
+
+# 기본 노드 위치 확인
+
+folium.Marker([37.5677894, 126.9488821] # 금화터널
+               ,icon=folium.Icon(color='black', icon='leaf')).add_to(m01) 
+
+folium.Marker([37.4977796, 127.0755652] # 현대오일뱅크(주) 직영소월길주유소
+               ,icon=folium.Icon(color='black', icon='star')).add_to(m01) 
+
+m01.save('Linear.html')
+
+# 교통량
+T = [0 for i in range(135)]
+
+for j in range(len(Merge_Road)):
+  T[j] = Merge_Road['교통량'][j]
+  
+# 2차원 리스트 선언 
+D = [[0 for col in range(550)] for row in range(135)]  # col = 열(i개), row = 행(j개) --> 나중에 range 안의 숫자만 바꾸어 주면 된다.
+
+# 거리 계산 알고리즘
+i = 0
+j = 0
+
+for j in range(len(M_address_df)):
+  q = M_address_df['lat'][j]
+  w = M_address_df['lng'][j]
+  for i in range(len(Station_address)):
+    e = Station_address_df['lat'][i]
+    r = Station_address_df['lng'][i]
+    D[j][i] = math.trunc(haversine((q, w) , (e, r), unit = 'm'))
+    
+# J 리스트 만들기(수요 대표지)
+J = [i  for i in range(135)]
+
+# K 리스트 만들기(Goals)
+K = [i for i in range(50)]
+
+# I 리스트 만들기(충전소 후보지)
+I = [i  for i in range(550)]
