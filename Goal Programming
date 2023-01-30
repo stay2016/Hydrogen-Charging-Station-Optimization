@@ -1,0 +1,159 @@
+# pulp 설치
+!pip install pulp==2.0.0
+
+# cplex
+!pip install cplex
+
+# docplex
+!pip install docplex
+
+# Goal Programming with CPLEX
+from pulp import *
+import cplex
+
+
+# Indices & Parameters
+
+## Indices
+
+J = J  # 수요 대표지역 (j = 135)
+I = I  # 수소충전소 후보지 (i = 550)
+K = K  # 목표 (k = 50)
+
+## Parameters
+
+T = T  # 교통량
+D = D  # 수요 대표지역과 충전소 후보지의 직선거리
+P = 48     # 충전소 최소 설치 개수
+Q = 1500   # 탱크 1개 당 설치 비용(단위: 만 원)
+S = P * Q  # 탱크 설치비용
+wP = 1
+wM = 1
+O = 10000  # 기준거리 (10km)
+
+N = [[i for i in I if D[j][i] <= O] for j in J]  # 수요대표지 j로 부터 10km 반경 안에 해당하는 수소충전소 후보지 i의 집합
+
+# Target Value
+t1 = 2
+t2 = S
+
+# Decision Variables
+
+x = pulp.LpVariable.dicts('x', I, 0,1, cat = 'Binary')
+y = pulp.LpVariable.dicts('y', J, lowBound = 0, cat = 'Integer')
+dP = pulp.LpVariable.dicts('dP', K, lowBound = 0, cat = 'Integer')
+dM = pulp.LpVariable.dicts('dM', K, lowBound = 0, cat = 'Integer')
+
+# model
+
+prob = LpProblem("GP", LpMinimize)
+
+# Objective Function
+
+prob += sum(wM * dM[k] / t1 for k in range(49)) + (wP * dP[49] / t2)
+
+# Hard Constraints
+
+for j in J:
+    prob += sum([x[i] for i in N[j]]) == y[j]
+
+for j in J:         
+    prob += y[j] >= 1  # 모든 수요 대표지에서 10km 반경 內에 충전소 1개 이상 필요
+
+prob += sum([x[i] for i in I]) >= P  # 충전소 설치 개수는 P개 이상으로 한다
+
+# Goals
+
+# 1. 교통량이 평균보다 많은 지역에는 2개 이상 설치되면 좋겠다
+
+prob += y[0] + dM[0] - dP[0] == 2
+prob += y[1] + dM[1] - dP[1] == 2
+prob += y[2] + dM[2] - dP[2] == 2
+prob += y[3] + dM[3] - dP[3] == 2
+prob += y[4] + dM[4] - dP[4] == 2
+prob += y[5] + dM[5] - dP[5] == 2
+prob += y[6] + dM[6] - dP[6] == 2
+prob += y[7] + dM[7] - dP[7] == 2
+prob += y[8] + dM[8] - dP[8] == 2
+prob += y[9] + dM[9] - dP[9] == 2
+prob += y[10] + dM[10] - dP[10] == 2
+
+prob += y[11] + dM[11] - dP[11] == 2
+prob += y[12] + dM[12] - dP[12] == 2
+prob += y[13] + dM[13] - dP[13] == 2
+prob += y[14] + dM[14] - dP[14] == 2
+prob += y[15] + dM[15] - dP[15] == 2
+prob += y[16] + dM[16] - dP[16] == 2
+prob += y[17] + dM[17] - dP[17] == 2
+prob += y[18] + dM[18] - dP[18] == 2
+prob += y[19] + dM[19] - dP[19] == 2
+prob += y[20] + dM[20] - dP[20] == 2
+
+prob += y[21] + dM[21] - dP[21] == 2
+prob += y[22] + dM[22] - dP[22] == 2
+prob += y[23] + dM[23] - dP[23] == 2
+prob += y[24] + dM[24] - dP[24] == 2
+prob += y[25] + dM[25] - dP[25] == 2
+prob += y[26] + dM[26] - dP[26] == 2
+prob += y[27] + dM[27] - dP[27] == 2
+prob += y[28] + dM[28] - dP[28] == 2
+prob += y[29] + dM[29] - dP[29] == 2
+prob += y[30] + dM[30] - dP[30] == 2
+
+prob += y[31] + dM[31] - dP[31] == 2
+prob += y[32] + dM[32] - dP[32] == 2
+prob += y[33] + dM[33] - dP[33] == 2
+prob += y[34] + dM[34] - dP[34] == 2
+prob += y[35] + dM[35] - dP[35] == 2
+prob += y[36] + dM[36] - dP[36] == 2
+prob += y[37] + dM[37] - dP[37] == 2
+prob += y[38] + dM[38] - dP[38] == 2
+prob += y[39] + dM[39] - dP[39] == 2
+prob += y[40] + dM[40] - dP[40] == 2
+
+prob += y[41] + dM[41] - dP[41] == 2
+prob += y[42] + dM[42] - dP[42] == 2
+prob += y[43] + dM[43] - dP[43] == 2
+prob += y[44] + dM[44] - dP[44] == 2
+prob += y[45] + dM[45] - dP[45] == 2
+prob += y[46] + dM[46] - dP[46] == 2
+prob += y[47] + dM[47] - dP[47] == 2
+prob += y[48] + dM[48] - dP[48] == 2
+
+
+# Goal 2
+
+# 수소충전소 설치비용의 합은 48 * 15000000과 같았으면 좋겠다
+for i in I:
+    prob += sum([S * x[i] for i in I]) + dM[49] - dP[49] == S
+    
+# Solve problem
+CPLEX().solve(prob)
+
+x_soln = np.array([x[i].varValue for i in I])
+y_soln = np.array([y[j].varValue for j in J])
+dM_soln = np.array([dM[k].varValue for k in K])
+dP_soln = np.array([dP[k].varValue for k in K])
+
+print("=================  Model output  ================= ")
+
+print (("Status:"), LpStatus[prob.status])
+print ("Objective = ", value(prob.objective))
+print ("x = ", x_soln)
+print ("y = ", y_soln)
+print ("dM = ", dM_soln)
+print ("dP = ", dP_soln)
+
+# Create the DataFrame
+
+print("=================  Station_address  ================= ")
+
+raw_data = {'행정구역': Station_address_df['행정구역'],
+            '충전소 이름': Station_address_df['충전소 이름'],
+            '상세주소':Station_address_df['상세주소'],
+            '설치여부': x_soln}
+data = pd.DataFrame(raw_data)
+print(data)
+
+# CSV파일로 저장하기
+data.to_csv("설치여부.csv", encoding='cp949')
